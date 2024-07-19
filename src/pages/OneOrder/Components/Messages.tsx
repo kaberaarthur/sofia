@@ -1,6 +1,12 @@
 import React from 'react';
+import { useEffect, useState } from 'react';
 
-const Messages: React.FC = () => (
+
+interface InstructionsProps {
+    orderId: string;
+  }
+
+const Messages: React.FC<InstructionsProps> = ({ orderId }) => (
   <div>
     <h2>Messages</h2>
     <p>Here are the messages...</p>

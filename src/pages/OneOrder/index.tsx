@@ -24,13 +24,13 @@ const Main = () => {
                 Instructions
             </button>
             <button
-                onClick={() => setContent(<OrderFiles />)}
+                onClick={() => setContent(<OrderFiles orderId={`${orderId}`} />)}
                 className="bg-primary text-white font-semibold py-2 px-4 rounded"
             >
                 Order Files
             </button>
             <button
-                onClick={() => setContent(<Messages />)}
+                onClick={() => setContent(<Messages orderId={`${orderId}`} />)}
                 className="bg-primary text-white font-semibold py-2 px-4 rounded"
             >
                 Messages
