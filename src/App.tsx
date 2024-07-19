@@ -21,6 +21,8 @@ import NoSidebarLayout from './layout/NoSidebarLayout';
 // Ops Pages
 import OpsDashboard from './pages/OpsDashboard/OpsDashboard';
 import OpsSignIn from './pages/Authentication/OpsSignIn';
+import OpsBiddingOrders from './pages/OpsBiddingOrders'
+import OneOrder from './pages/OneOrder'
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -42,8 +44,26 @@ function App() {
         path="/sofia/opsdashboard"
         element={
           <DefaultLayout>
-            <PageTitle title="Ops Dashboard" />
+            <PageTitle title="Dashboard" />
             <OpsDashboard />
+          </DefaultLayout>
+        }
+      />
+      <Route
+        path="/sofia/opsbidding"
+        element={
+          <DefaultLayout>
+            <PageTitle title="Bidding Orders" />
+            <OpsBiddingOrders/>
+          </DefaultLayout>
+        }
+      />
+      <Route
+        path="/sofia/opsoneorder/:orderId"
+        element={
+          <DefaultLayout>
+            <PageTitle title="One Order" />
+            <OneOrder/>
           </DefaultLayout>
         }
       />

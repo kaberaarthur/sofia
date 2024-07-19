@@ -17,7 +17,6 @@ const SignUp: React.FC = () => {
   const [showPasswordError, setPasswordError] = useState(false);
   const [showFieldsError, setShowFieldsError] = useState(false);
   const [requestError, setRequestError] = useState('');
-  const [countries, setCountries] = useState([]);
   const domain = window.location.hostname;
   const navigate = useNavigate();
 
