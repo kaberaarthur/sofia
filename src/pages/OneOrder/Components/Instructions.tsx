@@ -88,7 +88,8 @@ const Instructions: React.FC<InstructionsProps> = ({ orderId }) => {
             const result: Order = await response.json();
             setOrderData(result);
             setLoading(false);
-            console.log(result);
+            console.log(`Client ID: ${result.order_clientid}`);
+            localStorage.setItem('order_clientid', `${result.order_clientid}`);
           } catch (error) {
             setError(error as Error);
             setLoading(false);

@@ -21,8 +21,17 @@ import NoSidebarLayout from './layout/NoSidebarLayout';
 // Ops Pages
 import OpsDashboard from './pages/OpsDashboard/OpsDashboard';
 import OpsSignIn from './pages/Authentication/OpsSignIn';
-import OpsBiddingOrders from './pages/OpsBiddingOrders'
 import OneOrder from './pages/OneOrder'
+import OpsBiddingOrders from './pages/OpsBiddingOrders'
+import OpsCancelledOrders from './pages/OpsCancelledOrders'
+import OpsCompletedOrders from './pages/OpsCompletedOrders'
+import OpsEditingOrders from './pages/OpsEditingOrders'
+import OpsProgressOrders from './pages/OpsProgressOrders'
+import OpsRevisionOrders from './pages/OpsRevisionOrders'
+import OpsUnpaidOrders from './pages/OpsUnpaidOrders'
+import OpsDiscounts from './pages/OpsDiscounts'
+import OpsCreateOrder from './pages/OpsCreateOrder'
+
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -56,6 +65,78 @@ function App() {
             <PageTitle title="Bidding Orders" />
             <OpsBiddingOrders/>
           </DefaultLayout>
+        }
+      />
+      <Route
+        path="/sofia/opscancelled"
+        element={
+          <DefaultLayout>
+            <PageTitle title="Cancelled Orders" />
+            <OpsCancelledOrders/>
+          </DefaultLayout>
+        }
+      />
+      <Route
+        path="/sofia/opscompleted"
+        element={
+          <DefaultLayout>
+            <PageTitle title="Completed Orders" />
+            <OpsCompletedOrders/>
+          </DefaultLayout>
+        }
+      />
+      <Route
+        path="/sofia/opsediting"
+        element={
+          <DefaultLayout>
+            <PageTitle title="Editing Orders" />
+            <OpsEditingOrders/>
+          </DefaultLayout>
+        }
+      />
+      <Route
+        path="/sofia/opsprogress"
+        element={
+          <DefaultLayout>
+            <PageTitle title="Orders in Progress" />
+            <OpsProgressOrders/>
+          </DefaultLayout>
+        }
+      />
+      <Route
+        path="/sofia/opsrevision"
+        element={
+          <DefaultLayout>
+            <PageTitle title="Revision Orders" />
+            <OpsRevisionOrders/>
+          </DefaultLayout>
+        }
+      />
+      <Route
+        path="/sofia/opsunpaid"
+        element={
+          <DefaultLayout>
+            <PageTitle title="Unpaid Orders" />
+            <OpsUnpaidOrders/>
+          </DefaultLayout>
+        }
+      />
+      <Route
+        path="/sofia/opsdiscounts"
+        element={
+          <DefaultLayout>
+            <PageTitle title="My Discounts" />
+            <OpsDiscounts/>
+          </DefaultLayout>
+        }
+      />
+      <Route
+        path="/sofia/opscreateorder"
+        element={
+          <NoSidebarLayout>
+            <PageTitle title="New Order" />
+            <OpsCreateOrder/>
+          </NoSidebarLayout>
         }
       />
       <Route
@@ -104,7 +185,7 @@ function App() {
         }
       />
       <Route
-        path="/forms/form-elements"
+        path="/sofia/forms/form-elements"
         element={
           <DefaultLayout>
             <PageTitle title="Form Elements | TailAdmin - Tailwind CSS Admin Dashboard Template" />
@@ -113,7 +194,7 @@ function App() {
         }
       />
       <Route
-        path="/forms/form-layout"
+        path="/sofia/forms/form-layout"
         element={
           <DefaultLayout>
             <PageTitle title="Form Layout | TailAdmin - Tailwind CSS Admin Dashboard Template" />

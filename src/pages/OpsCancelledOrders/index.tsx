@@ -99,7 +99,7 @@ const Main: React.FC = () => {
   const [userData, setUserData] = useState<UserData | null>(null);
 
   const perPage = 10;
-  const orderStatus = 'bidding';
+  const orderStatus = 'Cancelled';
 
   const [user, setUser] = useState(null);
 

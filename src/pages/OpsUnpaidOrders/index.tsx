@@ -99,7 +99,7 @@ const Main: React.FC = () => {
   const [userData, setUserData] = useState<UserData | null>(null);
 
   const perPage = 10;
-  const orderStatus = 'bidding';
+  const orderPaid = 'unpaid';
 
   const [user, setUser] = useState(null);
 
@@ -138,7 +138,7 @@ const Main: React.FC = () => {
   // Fetch Orders Data
   const fetchData = async (page: number) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/opsorders?page=${page}&order_clientid=${orderClientId}&per_page=${perPage}&order_status=${orderStatus}`);
+      const response = await fetch(`http://127.0.0.1:8000/api/opsorders?page=${page}&order_clientid=${orderClientId}&per_page=${perPage}&order_paid=${orderPaid}`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -186,7 +186,7 @@ const Main: React.FC = () => {
 
   return (
     <>
-      <Breadcrumb pageName="Bidding Orders" />
+      <Breadcrumb pageName="Unpaid" />
 
       <div className="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
       <div className="max-w-full overflow-x-auto">
