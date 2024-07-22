@@ -251,6 +251,9 @@ const Main: React.FC = () => {
         setSelectedPricingId(pricingButtonId);
     };
 
+    const firstFivePricings = pricings.slice(0, 5);
+    const lastFivePricings = pricings.slice(5, 10);
+
     if (!ACLevels) {
         return <div>Loading...</div>;
     }
@@ -531,20 +534,52 @@ const Main: React.FC = () => {
                     <div className="flex flex-col md:flex-row pb-4">
                         <label htmlFor="title" className="w-full md:w-1/4 text-gray-700 mb-2 md:mb-0 font-bold pr-2">Deadline</label>
                         <div id="button-group" className="flex flex-col md:flex-row w-full space-y-2 md:space-y-0 md:space-x-2">
-                            {pricings.map((level, index) => (
-                                <button
-                                    key={level.pricing_id}
-                                    onClick={() => selectPricingButton(level.pricing_id)}
-                                    className={`btn w-full md:w-auto px-2 py-2 text-gray-900 bg-white border border-gray-300 hover:bg-blue-950 hover:text-white ${
-                                        selectedPricingId === level.pricing_id ? 'bg-blue-950 text-white' : ''
-                                    }`}
-                                >
-                                    {level.pricing_urgency} {level.pricing_duration}
-                                </button>
-                            ))}
+                            {/* First Row */}
+                            <div className="flex flex-wrap gap-2 mb-2">
+                                {firstFivePricings.map((level) => (
+                                    <button
+                                        key={level.pricing_id}
+                                        onClick={() => selectPricingButton(level.pricing_id)}
+                                        className={`btn flex-1 min-w-[calc(20%-0.5rem)] px-2 py-2 text-gray-900 bg-white border border-gray-300 hover:bg-blue-950 hover:text-white ${
+                                            selectedPricingId === level.pricing_id ? 'bg-blue-950 text-white' : ''
+                                        }`}
+                                    >
+                                        {level.pricing_urgency} {level.pricing_duration}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Second Row */}
+                            <div className="flex flex-wrap gap-2">
+                                {lastFivePricings.map((level) => (
+                                    <button
+                                        key={level.pricing_id}
+                                        onClick={() => selectPricingButton(level.pricing_id)}
+                                        className={`btn flex-1 min-w-[calc(20%-0.5rem)] px-2 py-2 text-gray-900 bg-white border border-gray-300 hover:bg-blue-950 hover:text-white ${
+                                            selectedPricingId === level.pricing_id ? 'bg-blue-950 text-white' : ''
+                                        }`}
+                                    >
+                                        {level.pricing_urgency} {level.pricing_duration}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
+                    <div className="flex flex-col md:flex-row pb-4">
+                        <label htmlFor="title" className="w-full md:w-1/4 text-gray-700 mb-2 md:mb-0 font-bold pr-2"></label>
+                        <div id="button-group" className="flex flex-col md:flex-row w-full space-y-2 md:space-y-0 md:space-x-2">
+                            <p className='text-sm'>Mon Jul 22 2024 13:01:23 GMT+0300 (East Africa Time)</p>
+                        </div>
+                    </div>
+                    
                     {/* Deadline */}
+
+                    {/* Pricing Details */}
+                    <div className="flex flex-col md:flex-row pb-8 pt-8">
+                        <button className="border border-blue-950 border-l-2 border-t-2 border-r-0 border-b-2 text-blue-950 py-4 px-8 text-xl font-base">
+                            3. Sign Up/ Login
+                        </button>
+                    </div>
                 </div>
 
                 {/* Second Column */}
