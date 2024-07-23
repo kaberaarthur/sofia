@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import OrderFiles from './Components/OrderFiles';
+import { Link, useNavigate } from 'react-router-dom';
 
 
 interface ApiResponse {
@@ -59,9 +60,20 @@ interface Pricing {
     xx: number;
 }
 
+type User = {
+    id: number;
+    name: string;
+    email: string;
+    phone: string;
+  };
+
 const Main: React.FC = () => {
+    const navigate = useNavigate();
+
     const [ACLevels, setACLevels] = useState<ACLevel[]>([]);
     const [selectedId, setSelectedId] = useState<number | null>(null);
+    const [acLevelValue, setACLevelValue] = useState<number | null>(null);
+    const [acLevelName, setACLevelName] = useState<string>('Undergraduate');
 
     // Handle PP Types
     const [PpTypes, setPpTypes] = useState<PpType[]>([]);
@@ -72,7 +84,7 @@ const Main: React.FC = () => {
     // Handle Subjects
     const [subjects, setSubjects] = useState<Subject[]>([]);
     const [subjectValue, setSubjectValue] = useState<number>(1.0);
-    const [subjectName, setSubjectName] = useState<string>('Essay (Any Type)');
+    const [subjectName, setSubjectName] = useState<string>('Archeology');
 
     // Handle Title
     const [title, setTitle] = useState('');
@@ -151,6 +163,42 @@ const Main: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<Error | null>(null);
 
+    // Create Order
+    // First get the User Details
+    const [user, setUser] = useState<User | null>(null);
+    const [dlPricing, setDLPricing] = useState<number>(5.79);
+
+    const fetchUser = async () => {
+        try {
+            const response = await fetch('http://127.0.0.1:8000/api/user', {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Accept': 'application/json'
+                }
+              });
+      
+              if (!response.ok) {
+                throw new Error('Failed to fetch user details');
+              }
+      
+              const userData = await response.json();
+              setUser(userData);
+              console.log(userData.name)
+        } catch (error) {
+            console.log("Unable to Fetch User")
+        }
+    }
+
+    const createOrder= async () => {
+        try {
+            console.log("Creating Order")
+        } catch (error) {
+            console.log("Error Creating Order");
+            setOverError("Error Creating Order");
+        }
+    }
+
     const fetchACLevelsData = async () => {
         try {
             const response = await fetch(`http://127.0.0.1:8000/api/opsaclevels`);
@@ -159,11 +207,16 @@ const Main: React.FC = () => {
             }
             const aclevelsResult: ApiResponse = await response.json();
             setACLevels(aclevelsResult.data);
-            // console.log();
 
             // Set the default selected button based on aclevel_checked field
             const defaultSelected = aclevelsResult.data.find(level => level.aclevel_checked);
             setSelectedId(defaultSelected ? defaultSelected.aclevel_id : null);
+            
+            // Print the data of the default selected
+            if (defaultSelected) {
+                console.log("Default selected academic level:", defaultSelected.aclevel_value);
+                setACLevelValue(Number(defaultSelected.aclevel_value))
+            }
 
             setLoading(false);
         } catch (error) {
@@ -182,7 +235,7 @@ const Main: React.FC = () => {
             setPpTypes(pptypesResult.data);
             setLoading(false);
 
-            console.log(pptypesResult.data)
+            // console.log(pptypesResult.data)
         } catch (error) {
             setError(error as Error);
             setLoading(false);
@@ -199,7 +252,7 @@ const Main: React.FC = () => {
             setSubjects(subjectsResult.data);
             setLoading(false);
 
-            console.log(subjectsResult.data)
+            // console.log(subjectsResult.data)
         } catch (error) {
             setError(error as Error);
             setLoading(false);
@@ -231,8 +284,9 @@ const Main: React.FC = () => {
         fetchPricingsData();
     }, []);
 
-    const selectButton = (buttonId: number) => {
+    const selectButton = (buttonId: number, acLevelNameHere: string) => {
         setSelectedId(buttonId);
+        setACLevelName(acLevelNameHere)
     };
 
     const selectCitationButton = (buttonName: string, buttonId: number) => {
@@ -246,13 +300,186 @@ const Main: React.FC = () => {
         console.log('Selected files received in parent component:', files);
       };
 
-    // Pricing Button
-    const selectPricingButton = (pricingButtonId: number) => {
+    // Handle Deadline
+    const [deadlineString, setDeadlineString] = useState<string>('');
+
+    const addTime = (duration: string): Date => {
+        const currentTime = new Date();
+    
+        const regex = /^(\d+)(Hours|Days)$/;
+        const match = duration.match(regex);
+    
+        if (!match) {
+            throw new Error("Invalid duration format. Use '48Hours' or '5Days'.");
+        }
+    
+        const value = parseInt(match[1], 10);
+        const unit = match[2];
+    
+        switch (unit) {
+            case 'Hours':
+                currentTime.setHours(currentTime.getHours() + value);
+                break;
+            case 'Days':
+                currentTime.setDate(currentTime.getDate() + value);
+                break;
+            default:
+                throw new Error("Invalid time unit. Use 'Hours' or 'Days'.");
+        }
+    
+        return currentTime;
+    };
+
+    const [newTime, setNewTime] = useState<Date | null>(null);
+
+    const handleCalculateNewTime = () => {
+        try {
+            const calculatedTime = addTime(deadlineString);
+            setNewTime(calculatedTime);
+        } catch (error) {
+            setOverError('Error calculating Time');
+            console.log('Error calculating Time');
+        }
+    };
+
+    const selectPricingButton = (pricingButtonId: number, pricingUrgency: number, pricingDuration: string) => {
         setSelectedPricingId(pricingButtonId);
+        setDeadlineString(`${pricingUrgency}${pricingDuration}`);
+        console.log(deadlineString);
+        handleCalculateNewTime();
     };
 
     const firstFivePricings = pricings.slice(0, 5);
     const lastFivePricings = pricings.slice(5, 10);
+
+    // Handle Signup/Signin
+    const [activeTab, setActiveTab] = useState<string>('new');
+
+    const handleTabClick = (tab: string) => {
+        setActiveTab(tab);
+    };
+
+    // User Management
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [passwordConfirmation, setPasswordConfirmation] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
+    const [name, setName] = useState('');
+    const [phone, setPhone] = useState('');
+    const [overError, setOverError] = useState('');
+    const [loginError, setLoginError] = useState('');
+    const [showFieldsError, setShowFieldsError] = useState(false);
+    const [requestError, setRequestError] = useState(false);
+    const domain = window.location.hostname;
+
+
+    const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+    // console.log("User Token: ", token)
+
+
+    const handleLogin = async () => {
+
+        // Check if all fields are entered
+        if (!email || !password) {
+          console.log('All fields are required.');
+          setShowFieldsError(true);
+          return;
+        }
+    
+        // Send data to the API
+        try {
+          const response = await fetch('http://127.0.0.1:8000/api/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+              email: email,
+              password: password,
+            }),
+          });
+    
+          if (response.ok) {
+            const data = await response.json();
+            console.log('Login successful:', data.user);
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('storedUser', JSON.stringify(data.user));
+            navigate('/sofia/opsdashboard')
+          } else {
+            const errorData = await response.json();
+            console.log('Login failed: ', errorData.message);
+            setRequestError(errorData.message);
+            setLoginError(errorData.message);
+          }
+        } catch (error) {
+          console.error('Error during registration:', error);
+        }
+      };
+    
+      const handleRegister = async () => {
+        // Check if all fields are entered
+        if (!email || !name || !phone || !password || !passwordConfirmation) {
+          console.log('All fields are required.');
+          setShowFieldsError(true);
+          return;
+        }
+    
+        // Check if passwords match
+        if (password !== passwordConfirmation) {
+          console.log('Passwords do not match.');
+          setRequestError(true);
+          setOverError('Passwords do not match.');
+          return;
+        }
+    
+        // Log the values of the fields entered
+        console.log('Email:', email);
+        console.log('Full Name:', name);
+        console.log('Phone Number:', phone);
+        console.log('Password:', password);
+        console.log('Password Confirmation:', passwordConfirmation);
+    
+        // Send data to the API
+        try {
+          const response = await fetch('http://127.0.0.1:8000/api/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+              name: name,
+              email: email,
+              password: password,
+              password_confirmation: passwordConfirmation,
+              client_phone: phone,
+              client_site: domain,
+              client_country: 'United States',
+            }),
+          });
+    
+          if (response.ok) {
+            const data = await response.json();
+            console.log('Registration successful:', data.user);
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('storedUser', data.user);
+            navigate('/sofia/opsdashboard');
+          } else {
+            const errorData = await response.json();
+            console.log('Registration failed:', errorData);
+            setRequestError(true)
+            setOverError("Registration has Failed");
+          }
+        } catch (error) {
+          console.error('Error during registration:', error);
+        }
+      };
+    
+    
+
+
 
     if (!ACLevels) {
         return <div>Loading...</div>;
@@ -274,7 +501,11 @@ const Main: React.FC = () => {
                             {ACLevels.map((level, index) => (
                                 <button
                                     key={level.aclevel_id}
-                                    onClick={() => selectButton(level.aclevel_id)}
+                                    onClick={() => {
+                                        selectButton(level.aclevel_id, level.aclevel_name);
+                                        setACLevelValue(Number(level.aclevel_value));
+                                        // console.log("AC Level Value", level.aclevel_value);
+                                    }}
                                     className={`btn w-full md:w-auto px-2 py-2 text-gray-900 bg-white border border-gray-300 hover:bg-blue-950 hover:text-white ${
                                         selectedId === level.aclevel_id ? 'bg-blue-950 text-white' : ''
                                     }`}
@@ -331,7 +562,7 @@ const Main: React.FC = () => {
                                     if(selectedSubject) {
                                         setSubjectValue(selectedSubject["sub_pvalue"]);
                                         setSubjectName(selectedSubject["sub_name"]);
-                                        console.log("Instructions: ", instructions);
+                                        console.log("Subject Name: ", selectedSubject["sub_name"]);
                                     }
                                     
                                 }}
@@ -348,13 +579,13 @@ const Main: React.FC = () => {
                     <div className="flex flex-col md:flex-row pb-4">
                         <label htmlFor="title" className="w-full md:w-1/4 text-gray-700 mb-2 md:mb-0 font-bold pr-2">Title</label>
                         <div className="flex flex-col md:flex-row w-full space-y-2 md:space-y-0 md:space-x-2">
-                        <input 
-                            type="text" 
-                            id="email" 
-                            className="w-full p-2 border border-gray-300 rounded" 
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                        />
+                            <input 
+                                type="text" 
+                                id="email" 
+                                className="w-full p-2 border border-gray-300 rounded" 
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                            />
                         </div>
                     </div>
                     {/* Title Area */}
@@ -539,7 +770,10 @@ const Main: React.FC = () => {
                                 {firstFivePricings.map((level) => (
                                     <button
                                         key={level.pricing_id}
-                                        onClick={() => selectPricingButton(level.pricing_id)}
+                                        onClick={() => {
+                                            selectPricingButton(level.pricing_id, level.pricing_urgency, level.pricing_duration);
+                                            setDLPricing(level.pricing_value);
+                                        }}
                                         className={`btn flex-1 min-w-[calc(20%-0.5rem)] px-2 py-2 text-gray-900 bg-white border border-gray-300 hover:bg-blue-950 hover:text-white ${
                                             selectedPricingId === level.pricing_id ? 'bg-blue-950 text-white' : ''
                                         }`}
@@ -554,7 +788,7 @@ const Main: React.FC = () => {
                                 {lastFivePricings.map((level) => (
                                     <button
                                         key={level.pricing_id}
-                                        onClick={() => selectPricingButton(level.pricing_id)}
+                                        onClick={() => selectPricingButton(level.pricing_id, level.pricing_urgency, level.pricing_duration)}
                                         className={`btn flex-1 min-w-[calc(20%-0.5rem)] px-2 py-2 text-gray-900 bg-white border border-gray-300 hover:bg-blue-950 hover:text-white ${
                                             selectedPricingId === level.pricing_id ? 'bg-blue-950 text-white' : ''
                                         }`}
@@ -568,28 +802,236 @@ const Main: React.FC = () => {
                     <div className="flex flex-col md:flex-row pb-4">
                         <label htmlFor="title" className="w-full md:w-1/4 text-gray-700 mb-2 md:mb-0 font-bold pr-2"></label>
                         <div id="button-group" className="flex flex-col md:flex-row w-full space-y-2 md:space-y-0 md:space-x-2">
-                            <p className='text-sm'>Mon Jul 22 2024 13:01:23 GMT+0300 (East Africa Time)</p>
+                            <p className='text-sm'>{newTime?.toLocaleString()}</p>
                         </div>
                     </div>
                     
                     {/* Deadline */}
 
-                    {/* Pricing Details */}
+                    
+
+                    {/* Sign up/Sign in */}
+                    {token ? (
+                        <div>
+                            {/* Continue Button */}
+                            <div className="flex flex-col md:flex-row pb-4">
+                                <button className='border border-blue-950 w-full py-4 text-2xl hover:text-blue-950 hover:bg-transparent bg-blue-950 text-white' onClick={createOrder}>Continue</button>
+                            </div>
+                        </div>
+                    ) : (
+                    <>
+                    {/* Sign In Title */}
                     <div className="flex flex-col md:flex-row pb-8 pt-8">
                         <button className="border border-blue-950 border-l-2 border-t-2 border-r-0 border-b-2 text-blue-950 py-4 px-8 text-xl font-base">
-                            3. Sign Up/ Login
+                            3. Sign Up/Login
                         </button>
                     </div>
+
+                    <div className="flex flex-col md:flex-row pb-4">
+                            <div className="w-full">
+                                <div className="flex border-b border-gray-300 mb-4">
+                                    <button
+                                        className={`px-4 py-2 text-gray-800 ${
+                                            activeTab === 'new' ? 'border-b-2 border-blue-500' : ''
+                                        }`}
+                                        onClick={() => handleTabClick('new')}
+                                    >
+                                        New Customer
+                                    </button>
+                                    <button
+                                        className={`px-4 py-2 text-gray-800 ${
+                                            activeTab === 'returning' ? 'border-b-2 border-blue-500' : ''
+                                        }`}
+                                        onClick={() => handleTabClick('returning')}
+                                    >
+                                        Returning Customer
+                                    </button>
+                                </div>
+                                <div className="p-4">
+                                    {activeTab === 'new' && (
+                                        <>
+                                        {/* Name */}
+                                        <div className="flex flex-col md:flex-row pb-4">
+                                            <label htmlFor="title" className="w-full md:w-1/4 text-gray-700 mb-2 md:mb-0 font-bold pr-2">Full Name</label>
+                                            <div className="flex flex-col md:flex-row w-full space-y-2 md:space-y-0 md:space-x-2">
+                                                <input 
+                                                    type="text" 
+                                                    id="email" 
+                                                    className="w-full p-2 border border-gray-300 rounded" 
+                                                    value={name}
+                                                    onChange={(e) => setName(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Email */}
+                                        <div className="flex flex-col md:flex-row pb-4">
+                                            <label htmlFor="title" className="w-full md:w-1/4 text-gray-700 mb-2 md:mb-0 font-bold pr-2">Email Address</label>
+                                            <div className="flex flex-col md:flex-row w-full space-y-2 md:space-y-0 md:space-x-2">
+                                                <input 
+                                                    type="text" 
+                                                    id="email" 
+                                                    className="w-full p-2 border border-gray-300 rounded" 
+                                                    value={email}
+                                                    onChange={(e) => setEmail(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Phone */}
+                                        <div className="flex flex-col md:flex-row pb-4">
+                                            <label htmlFor="title" className="w-full md:w-1/4 text-gray-700 mb-2 md:mb-0 font-bold pr-2">Phone</label>
+                                            <div className="flex flex-col md:flex-row w-full space-y-2 md:space-y-0 md:space-x-2">
+                                                <input 
+                                                    type="text" 
+                                                    id="email" 
+                                                    className="w-full p-2 border border-gray-300 rounded" 
+                                                    value={phone}
+                                                    onChange={(e) => setPhone(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Password */}
+                                        <div className="flex flex-col md:flex-row pb-4">
+                                            <label htmlFor="title" className="w-full md:w-1/4 text-gray-700 mb-2 md:mb-0 font-bold pr-2">Password</label>
+                                            <div className="flex flex-col md:flex-row w-full space-y-2 md:space-y-0 md:space-x-2">
+                                                <div className='relative'>
+                                                    <input
+                                                        value={password}
+                                                        onChange={(e) => setPassword(e.target.value)}
+                                                        required
+                                                        type={showPassword ? 'text' : 'password'}
+                                                        placeholder="Enter your password"
+                                                        className="w-full rounded-sm border border-stroke border-blue-950 bg-transparent py-4 pl-2 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                                                    />
+
+                                                    <span className="absolute right-4 top-4"  onClick={() => setShowPassword(!showPassword)}>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-6">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                        </svg>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Password Confirmation */}
+                                        <div className="flex flex-col md:flex-row pb-4">
+                                            <label htmlFor="title" className="w-full md:w-1/4 text-gray-700 mb-2 md:mb-0 font-bold pr-2">Re-type Password</label>
+                                            <div className="flex flex-col md:flex-row w-full space-y-2 md:space-y-0 md:space-x-2">
+                                                <div className='relative'>
+                                                    <input
+                                                        value={passwordConfirmation}
+                                                        onChange={(e) => setPasswordConfirmation(e.target.value)}
+                                                        required
+                                                        type={showPasswordConfirmation ? 'text' : 'password'}
+                                                        placeholder="Enter your password"
+                                                        className="w-full rounded-sm border border-stroke border-blue-950 bg-transparent py-4 pl-2 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                                                    />
+
+                                                    <span className="absolute right-4 top-4"  onClick={() => setShowPasswordConfirmation(!showPasswordConfirmation)}>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-6">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                        </svg>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Agree to Terms */}
+                                        <div className="flex flex-col md:flex-row pb-4">
+                                            <label htmlFor="title" className="w-full md:w-1/4 text-gray-700 mb-2 md:mb-0 font-bold pr-2"></label>
+                                            <div className="flex flex-col md:flex-row w-full space-y-2 md:space-y-0 md:space-x-2">
+                                                <p>By registering to this website, you automatically agree to the <span className='text-red-500 text-sm'>Terms and Conditions</span></p>
+                                            </div>
+                                        </div>
+
+                                        {/* Registration Error */}
+                                        <div className="flex flex-col md:flex-row pb-4">
+                                            <p className='text-sm text-red-500'>{overError}</p>
+                                        </div>
+
+                                        {/* Continue Button */}
+                                        <div className="flex flex-col md:flex-row pb-4">
+                                            <button className='border border-blue-950 w-full py-4 text-2xl hover:text-blue-950 hover:bg-transparent bg-blue-950 text-white' onClick={handleRegister}>Continue</button>
+                                        </div>
+                                        </>
+                                    )}
+                                    {activeTab === 'returning' && (
+                                        <>
+                                        {/* Email */}
+                                        <div className="flex flex-col md:flex-row pb-4">
+                                            <label htmlFor="title" className="w-full md:w-1/4 text-gray-700 mb-2 md:mb-0 font-bold pr-2">Email Address</label>
+                                            <div className="flex flex-col md:flex-row w-full space-y-2 md:space-y-0 md:space-x-2">
+                                                <input 
+                                                    type="text" 
+                                                    id="signinemail" 
+                                                    className="w-full p-2 border border-gray-300 rounded" 
+                                                    value={email}
+                                                    onChange={(e) => setEmail(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Password */}
+                                        <div className="flex flex-col md:flex-row pb-4">
+                                            <label htmlFor="title" className="w-full md:w-1/4 text-gray-700 mb-2 md:mb-0 font-bold pr-2">Password</label>
+                                            <div className="flex flex-col md:flex-row w-full space-y-2 md:space-y-0 md:space-x-2">
+                                                <input 
+                                                    type="password" 
+                                                    id="signinpassword" 
+                                                    className="w-full p-2 border border-gray-300 rounded" 
+                                                    value={password}
+                                                    onChange={(e) => setPassword(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* lOGIN Error */}
+                                        <div className="flex flex-col md:flex-row pb-4">
+                                            <p className='text-sm text-red-500'>{loginError}</p>
+                                        </div>
+
+                                        {/* Sign in Button */}
+                                        <div className="flex flex-col md:flex-row pb-4 pt-4">
+                                            <button 
+                                                className='border border-blue-950 w-full py-4 text-2xl hover:bg-transparent hover:text-blue-950 bg-blue-950 text-white'
+                                                onClick={handleLogin}
+                                            >
+                                                Continue
+                                            </button>
+                                        </div>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                    </div>
+                    </>
+                    )}
+                    {/* Title Area */}
                 </div>
 
                 {/* Second Column */}
                 <div className="w-full md:w-1/3 p-4 bg-green-100 shadow h-1/6">
-                    <div className="mb-2 text-base text-gray-700">Total: <span className='font-semibold text-gray-900'>$24</span></div>
-                    <div className="mb-2 text-base text-gray-700">Assignment <span className='font-semibold text-gray-900'>$24</span></div>
-                    <div className="mb-2 text-base text-gray-700">2 Pages x 12.50 <span className='font-semibold text-gray-900'>USD 52.50</span></div>
-                    <div className="mb-2 text-base text-gray-700">1 PPT Slide <span className='font-semibold text-gray-900'>USD 7.50</span></div>
+                    <div className="mb-2 text-lg font-semibold text-gray-700">
+                        {acLevelName}
+                        <hr className="border-gray-300 my-4" />
+                    </div>
+                    <div className="mb-2 text-base text-gray-700">{ppTypeName}</div>
+                    <div className="mb-2 text-base text-gray-700">{subjectName}</div>
+                    <div className="mb-2 text-base text-gray-700">{citationtName}</div>
+                    <div className="mb-2 text-base text-gray-700">{count} Pages x 12.50 <span className='font-semibold text-gray-900'>USD 52.50</span></div>
+                    {slides > 0 && (
+                        <div className="mb-2 text-base text-gray-700">
+                            {slides} PPT Slide <span className='font-semibold text-gray-900'>USD 7.50</span>
+                        </div>
+                    )}
                     <div className="absolute inset-x-0 top-0 border-t border-gray-700 my-2"></div>
-                    <div className="mb-2 text-base text-gray-700">Total Price <span className='font-semibold text-gray-900'>USD 60</span></div>
+                    {acLevelValue && (
+                        <div className="mb-2 text-base text-gray-700">Total Price <span className='font-semibold text-gray-900'>USD {acLevelValue * count * ppTypeValue * dlPricing}</span></div>
+                    )}
                     <div className="absolute inset-x-0 top-0 border-b border-gray-700 my-2"></div>
                     <div className="flex items-center">
                         <input 
