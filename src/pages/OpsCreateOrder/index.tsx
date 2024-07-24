@@ -69,6 +69,8 @@ type User = {
 
 const Main: React.FC = () => {
     const navigate = useNavigate();
+    const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+    console.log("User Token", token)
 
     const [ACLevels, setACLevels] = useState<ACLevel[]>([]);
     const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -192,10 +194,37 @@ const Main: React.FC = () => {
 
     const createOrder= async () => {
         try {
+            // First Create the Order and get Order Number
+            // Calculate prices considering Coupon e.t.c
+            // Use Order ID to upload the files
             console.log("Creating Order")
+            uploadFiles();
         } catch (error) {
             console.log("Error Creating Order");
             setOverError("Error Creating Order");
+        }
+    }
+
+    const [cpnName, setCPNName] = useState<string>('');
+    const [cpnValue, setCPNValue] = useState<number>(0);
+    const [cpnInValue, setCPNInValue] = useState<number>(0);
+
+    const fetchCoupon = async () => {
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/api/opscoupons?cpn_name=${cpnName}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch coupon data');
+            }
+            
+            const cpnResponse = await response.json();
+            if (cpnResponse.data && cpnResponse.data.length > 0) {
+                setCPNValue(cpnResponse.data[0].cpn_value);
+                setCPNInValue(cpnResponse.data[0].cpn_invalue);
+            } else {
+                console.log('No coupons found');
+            }
+        } catch(error) {
+            setError(error as Error);
         }
     }
 
@@ -270,6 +299,19 @@ const Main: React.FC = () => {
             setPricings(pricingsResult.data);
             setLoading(false);
 
+            // Set the default selected button based on aclevel_checked field
+            const defaultSelected = pricingsResult.data.find(level => level.pricing_checked);
+            setSelectedPricingId(defaultSelected ? defaultSelected.pricing_id : null);
+            
+            // Print the data of the default selected
+            if (defaultSelected) {
+                console.log("Default selected academic level:", defaultSelected.pricing_value);
+                setDLPricing(Number(defaultSelected.pricing_value))
+
+                const calculatedTime = addTime(`${defaultSelected.pricing_urgency}${defaultSelected.pricing_duration}`);
+                setNewTime(calculatedTime);
+            }
+
             console.log(pricingsResult.data)
         } catch (error) {
             setError(error as Error);
@@ -299,6 +341,56 @@ const Main: React.FC = () => {
         setSelectedFiles(files);
         console.log('Selected files received in parent component:', files);
       };
+
+    const clearFiles = () => {
+        setSelectedFiles([]);
+        setResponses([]);
+        // setShowAlert(false);
+        (document.getElementById('file') as HTMLInputElement).value = '';
+    };
+
+    // Upload Files
+    const [responses, setResponses] = useState<string[]>([]);
+    const uploadFiles = async () => {
+        if (selectedFiles.length === 0) {
+          alert("Please select files to upload");
+          return;
+        }
+    
+        const newResponses: string[] = [];
+        for (const file of selectedFiles) {
+          const formData = new FormData();
+          formData.append('file', file);
+    
+          try {
+            const response = await fetch(`http://127.0.0.1:8000/api/files/upload/${orderId}`, {
+              method: 'POST',
+              body: formData,
+            });
+    
+            const result = await response.json();
+    
+            if (response.ok) {
+              newResponses.push(`File ${file.name} uploaded successfully. URL: ${result.url}`);
+              console.log(`File ${file.name} uploaded successfully. URL: ${result.url}`)
+              console.log("This is the Order ID" + orderId)
+            } else {
+              newResponses.push(`Error uploading file ${file.name}: ${result.message}`);
+            }
+          } catch (error) {
+            if (error instanceof Error) {
+              newResponses.push(`Error uploading file ${file.name}: ${error.message}`);
+            } else {
+              newResponses.push(`Error uploading file ${file.name}: An unknown error occurred`);
+            }
+          }
+        }
+        // window.location.reload();
+    
+        setResponses(newResponses);
+        clearFiles();
+        // console.log(newResponses);
+    };
 
     // Handle Deadline
     const [deadlineString, setDeadlineString] = useState<string>('');
@@ -346,7 +438,6 @@ const Main: React.FC = () => {
         setSelectedPricingId(pricingButtonId);
         setDeadlineString(`${pricingUrgency}${pricingDuration}`);
         console.log(deadlineString);
-        handleCalculateNewTime();
     };
 
     const firstFivePricings = pricings.slice(0, 5);
@@ -374,8 +465,15 @@ const Main: React.FC = () => {
     const domain = window.location.hostname;
 
 
-    const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+    
     // console.log("User Token: ", token)
+
+    useEffect(() => {
+        if (token) {
+            // If the token is populated, run your function here
+            fetchUser();
+        }
+    }, [token]);
 
 
     const handleLogin = async () => {
@@ -406,7 +504,12 @@ const Main: React.FC = () => {
             console.log('Login successful:', data.user);
             localStorage.setItem('token', data.token);
             localStorage.setItem('storedUser', JSON.stringify(data.user));
-            navigate('/sofia/opsdashboard')
+
+            setToken(data.token);
+            setUser(data);
+
+            // Do Not Redirect
+            // navigate('/sofia/opsdashboard')
           } else {
             const errorData = await response.json();
             console.log('Login failed: ', errorData.message);
@@ -465,7 +568,10 @@ const Main: React.FC = () => {
             console.log('Registration successful:', data.user);
             localStorage.setItem('token', data.token);
             localStorage.setItem('storedUser', data.user);
-            navigate('/sofia/opsdashboard');
+            setToken(data.token);
+            setUser(data);
+            // Do not Redirect
+            // navigate('/sofia/opsdashboard');
           } else {
             const errorData = await response.json();
             console.log('Registration failed:', errorData);
@@ -506,8 +612,8 @@ const Main: React.FC = () => {
                                         setACLevelValue(Number(level.aclevel_value));
                                         // console.log("AC Level Value", level.aclevel_value);
                                     }}
-                                    className={`btn w-full md:w-auto px-2 py-2 text-gray-900 bg-white border border-gray-300 hover:bg-blue-950 hover:text-white ${
-                                        selectedId === level.aclevel_id ? 'bg-blue-950 text-white' : ''
+                                    className={`btn w-full md:w-auto px-2 py-2 border border-gray-300 hover:bg-blue-950 hover:text-white ${
+                                        selectedId === level.aclevel_id ? 'bg-blue-950 text-white' : 'text-gray-900 bg-white'
                                     }`}
                                 >
                                     {level.aclevel_name}
@@ -637,8 +743,8 @@ const Main: React.FC = () => {
                                 <button
                                     key={level.citation_id}
                                     onClick={() => selectCitationButton(level.citation_name, level.citation_id)}
-                                    className={`btn w-full md:w-auto px-2 py-2 text-gray-900 bg-white border border-gray-300 hover:bg-blue-950 hover:text-white ${
-                                        selectedCitationId === level.citation_id ? 'bg-blue-950 text-white' : ''
+                                    className={`btn w-full md:w-auto px-2 py-2 border border-gray-300 hover:bg-blue-950 hover:text-white ${
+                                        selectedCitationId === level.citation_id ? 'bg-blue-950 text-white' : 'text-gray-900 bg-white'
                                     }`}
                                 >
                                     {level.citation_name}
@@ -687,22 +793,23 @@ const Main: React.FC = () => {
                     <div className="flex flex-col md:flex-row pb-4">
                         <label htmlFor="title" className="w-full md:w-1/4 text-gray-700 mb-2 md:mb-0 font-bold pr-2">Word Spacing</label>
                         <div className="flex flex-col md:flex-row w-full space-y-2 md:space-y-0 md:space-x-2">
-                        <button
-                            onClick={() => handleSpacingChange(1.0, 'Double Spacing')}
-                            className={`btn w-full md:w-auto px-4 py-2 text-gray-900 bg-white border border-gray-300 hover:bg-blue-950 hover:text-white ${
-                                spacingValue === 1.0 ? 'bg-blue-950 text-white' : ''
-                            }`}
-                        >
-                            Double Spacing
-                        </button>
-                        <button
-                            onClick={() => handleSpacingChange(2.0, 'Single Spacing')}
-                            className={`btn w-full md:w-auto px-4 py-2 text-gray-900 bg-white border border-gray-300 hover:bg-blue-950 hover:text-white ${
-                                spacingValue === 2.0 ? 'bg-blue-950 text-white' : ''
-                            }`}
-                        >
-                            Single Spacing
-                        </button>
+                            <button
+                                onClick={() => handleSpacingChange(1.0, 'Double Spacing')}
+                                className={`btn w-full md:w-auto px-4 py-2 border border-gray-300 hover:bg-blue-950 hover:text-white ${
+                                    spacingValue === 1.0 ? 'bg-blue-950 text-white' : 'text-gray-900 bg-white'
+                                }`}
+                            >
+                                Double Spacing
+                            </button>
+                            <button
+                                onClick={() => handleSpacingChange(2.0, 'Single Spacing')}
+                                className={`btn w-full md:w-auto px-4 py-2 border border-gray-300 hover:bg-blue-950 hover:text-white ${
+                                    spacingValue === 2.0 ? 'bg-blue-950 text-white' : 'text-gray-900 bg-white'
+                                }`}
+                            >
+                                Single Spacing
+                            </button>
+
                         </div>
                     </div>
                     {/* Word Spacing */}
@@ -764,7 +871,7 @@ const Main: React.FC = () => {
                     {/* Deadline */}
                     <div className="flex flex-col md:flex-row pb-4">
                         <label htmlFor="title" className="w-full md:w-1/4 text-gray-700 mb-2 md:mb-0 font-bold pr-2">Deadline</label>
-                        <div id="button-group" className="flex flex-col md:flex-row w-full space-y-2 md:space-y-0 md:space-x-2">
+                        <div id="button-group" className="flex flex-col w-full space-y-2">
                             {/* First Row */}
                             <div className="flex flex-wrap gap-2 mb-2">
                                 {firstFivePricings.map((level) => (
@@ -773,9 +880,11 @@ const Main: React.FC = () => {
                                         onClick={() => {
                                             selectPricingButton(level.pricing_id, level.pricing_urgency, level.pricing_duration);
                                             setDLPricing(level.pricing_value);
+                                            const calculatedTime = addTime(`${level.pricing_urgency}${level.pricing_duration}`);
+                                            setNewTime(calculatedTime);
                                         }}
-                                        className={`btn flex-1 min-w-[calc(20%-0.5rem)] px-2 py-2 text-gray-900 bg-white border border-gray-300 hover:bg-blue-950 hover:text-white ${
-                                            selectedPricingId === level.pricing_id ? 'bg-blue-950 text-white' : ''
+                                        className={`btn flex-1 min-w-[calc(20%-0.5rem)] px-2 py-2 border border-gray-300 hover:bg-blue-950 hover:text-white ${
+                                            selectedPricingId === level.pricing_id ? 'bg-blue-950 text-white' : 'text-gray-900 bg-white'
                                         }`}
                                     >
                                         {level.pricing_urgency} {level.pricing_duration}
@@ -788,9 +897,14 @@ const Main: React.FC = () => {
                                 {lastFivePricings.map((level) => (
                                     <button
                                         key={level.pricing_id}
-                                        onClick={() => selectPricingButton(level.pricing_id, level.pricing_urgency, level.pricing_duration)}
-                                        className={`btn flex-1 min-w-[calc(20%-0.5rem)] px-2 py-2 text-gray-900 bg-white border border-gray-300 hover:bg-blue-950 hover:text-white ${
-                                            selectedPricingId === level.pricing_id ? 'bg-blue-950 text-white' : ''
+                                        onClick={() => {
+                                            selectPricingButton(level.pricing_id, level.pricing_urgency, level.pricing_duration);
+                                            setDLPricing(level.pricing_value);
+                                            const calculatedTime = addTime(`${level.pricing_urgency}${level.pricing_duration}`);
+                                            setNewTime(calculatedTime);
+                                        }}
+                                        className={`btn flex-1 min-w-[calc(20%-0.5rem)] px-2 py-2 border border-gray-300 hover:bg-blue-950 hover:text-white ${
+                                            selectedPricingId === level.pricing_id ? 'bg-blue-950 text-white' : 'text-gray-900 bg-white'
                                         }`}
                                     >
                                         {level.pricing_urgency} {level.pricing_duration}
@@ -815,7 +929,7 @@ const Main: React.FC = () => {
                         <div>
                             {/* Continue Button */}
                             <div className="flex flex-col md:flex-row pb-4">
-                                <button className='border border-blue-950 w-full py-4 text-2xl hover:text-blue-950 hover:bg-transparent bg-blue-950 text-white' onClick={createOrder}>Continue</button>
+                                <button className='border border-blue-950 w-full py-4 text-2xl hover:text-blue-950 hover:bg-transparent bg-blue-950 text-white' onClick={createOrder}>Place Order</button>
                             </div>
                         </div>
                     ) : (
@@ -955,7 +1069,7 @@ const Main: React.FC = () => {
 
                                         {/* Continue Button */}
                                         <div className="flex flex-col md:flex-row pb-4">
-                                            <button className='border border-blue-950 w-full py-4 text-2xl hover:text-blue-950 hover:bg-transparent bg-blue-950 text-white' onClick={handleRegister}>Continue</button>
+                                            <button className='border border-blue-950 w-full py-4 text-2xl hover:text-blue-950 hover:bg-transparent bg-blue-950 text-white' onClick={handleRegister}>Sign Up</button>
                                         </div>
                                         </>
                                     )}
@@ -1000,7 +1114,7 @@ const Main: React.FC = () => {
                                                 className='border border-blue-950 w-full py-4 text-2xl hover:bg-transparent hover:text-blue-950 bg-blue-950 text-white'
                                                 onClick={handleLogin}
                                             >
-                                                Continue
+                                                Login
                                             </button>
                                         </div>
                                         </>
@@ -1022,24 +1136,65 @@ const Main: React.FC = () => {
                     <div className="mb-2 text-base text-gray-700">{ppTypeName}</div>
                     <div className="mb-2 text-base text-gray-700">{subjectName}</div>
                     <div className="mb-2 text-base text-gray-700">{citationtName}</div>
-                    <div className="mb-2 text-base text-gray-700">{count} Pages x 12.50 <span className='font-semibold text-gray-900'>USD 52.50</span></div>
-                    {slides > 0 && (
+                    {acLevelValue && (
+                        <div className="mb-2 text-base text-gray-700">{count} Pages x {Number((acLevelValue * ppTypeValue * dlPricing * spacingValue).toFixed(2))} <span className='font-semibold text-gray-900'>USD {Number((acLevelValue * count * ppTypeValue * dlPricing * spacingValue).toFixed(2))}</span></div>
+                    )}
+                    {slides > 0 && acLevelValue && (
                         <div className="mb-2 text-base text-gray-700">
-                            {slides} PPT Slide <span className='font-semibold text-gray-900'>USD 7.50</span>
+                            {slides} PPT Slide <span className='font-semibold text-gray-900'>USD {Number((slides * acLevelValue * ppTypeValue * 3.50).toFixed(2))}</span>
+                        </div>
+                    )}
+                    {cpnValue > 0 && acLevelValue && cpnInValue > 0 && (
+                        <div className="mb-2 text-base text-gray-700">
+                            <div className="mb-2 text-base text-gray-700">{`Discount (${cpnInValue}%) `} 
+                                <span className='font-semibold text-gray-900'>
+                                    USD {
+                                        (() => {
+                                            const totalPrice = Number(((acLevelValue * count * ppTypeValue * dlPricing * spacingValue) + (slides * acLevelValue * ppTypeValue * 3.50)).toFixed(2));
+                                            const discountPercentage = cpnInValue / 100; // cpnInValue is 20 for a 20% discount
+                                            const discountAmount = totalPrice * discountPercentage;
+                                            return discountAmount.toFixed(2);
+                                        })()
+                                    }
+                                </span>
+                            </div>
                         </div>
                     )}
                     <div className="absolute inset-x-0 top-0 border-t border-gray-700 my-2"></div>
                     {acLevelValue && (
-                        <div className="mb-2 text-base text-gray-700">Total Price <span className='font-semibold text-gray-900'>USD {acLevelValue * count * ppTypeValue * dlPricing}</span></div>
+                        <div className="mb-2 text-base text-gray-700">{`Total Price `}
+                            <span className='font-semibold text-gray-900'>
+                                USD {
+                                    (() => {
+                                        const totalAmount = Number(((acLevelValue * count * ppTypeValue * dlPricing * spacingValue) + (slides * acLevelValue * ppTypeValue * 3.50)).toFixed(2));
+                                        if (cpnInValue > 0) {
+                                            const discountPercentage = cpnInValue / 100; // cpnInValue is 20 for a 20% discount
+                                            const discountAmount = totalAmount * discountPercentage;
+                                            const discountedPrice = totalAmount - discountAmount;
+                                            return discountedPrice.toFixed(2);
+                                        } else {
+                                            return totalAmount.toFixed(2);
+                                        }
+                                    })()
+                                }
+                            </span>
+                        </div>
                     )}
                     <div className="absolute inset-x-0 top-0 border-b border-gray-700 my-2"></div>
                     <div className="flex items-center">
-                        <input 
+                        <input
+                            value={cpnName}
+                            onChange={(e) => setCPNName(e.target.value)}
                             type="text" 
-                            placeholder="Enter Coupon" 
+                            placeholder="Enter Coupon Code" 
                             className="w-2/3 p-2 border border-gray-300 rounded" 
                         />
-                        <button className="w-1/3 p-2 ml-2 text-white bg-blue-950 rounded hover:bg-blue-700">Apply</button>
+                        <button 
+                            className="w-1/3 p-2 ml-2 text-white bg-blue-950 rounded hover:bg-blue-700"
+                            onClick={fetchCoupon}
+                        >
+                            Apply
+                        </button>
                     </div>
                 </div>
             </div>
