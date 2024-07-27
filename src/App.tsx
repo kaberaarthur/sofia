@@ -31,6 +31,7 @@ import OpsRevisionOrders from './pages/OpsRevisionOrders'
 import OpsUnpaidOrders from './pages/OpsUnpaidOrders'
 import OpsDiscounts from './pages/OpsDiscounts'
 import OpsCreateOrder from './pages/OpsCreateOrder'
+import OpsPayment from './pages/OpsPayment'
 
 
 function App() {
@@ -146,6 +147,15 @@ function App() {
             <PageTitle title="One Order" />
             <OneOrder/>
           </DefaultLayout>
+        }
+      />
+      <Route
+        path="/sofia/opspayment/:orderId"
+        element={
+          <NoSidebarLayout>
+            <PageTitle title="Make Payment" />
+            <OpsPayment/>
+          </NoSidebarLayout>
         }
       />
       <Route

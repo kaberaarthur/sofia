@@ -1,6 +1,7 @@
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
 
 interface ApiResponse {
   total: number;
@@ -86,6 +87,8 @@ interface UserData {
 }
 
 const Main: React.FC = () => {
+  const navigate = useNavigate();
+
   const [orderData, setOrderData] = useState<Order[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
@@ -167,9 +170,10 @@ const Main: React.FC = () => {
     return <div>Loading...</div>;
   }
 
-  const handlePayment = (amount: number) => {
+  const handlePayment = (orderId: number) => {
     // Your code to handle the payment goes here, using the 'amount' parameter
-    console.log(`Processing payment for amount: ${amount}`);
+    // console.log(`Processing payment for Order #${orderId}`);
+    navigate(`/sofia/opspayment/${orderId}`)
   }
 
   const handleNext = () => {
@@ -247,7 +251,7 @@ const Main: React.FC = () => {
                       order.order_paid === 'unpaid' ? (
                         <button
                           className="w-full xl:mr-3 text-white bg-primary p-2"
-                          onClick={() => handlePayment(order.order_amount)}
+                          onClick={() => handlePayment(order.order_id)}
                         >
                           Pay Now
                         </button>

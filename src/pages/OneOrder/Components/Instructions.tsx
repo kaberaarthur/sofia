@@ -1,5 +1,6 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface InstructionsProps {
     orderId: string;
@@ -75,6 +76,7 @@ const Instructions: React.FC<InstructionsProps> = ({ orderId }) => {
 
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<Error | null>(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         // Define the async function to fetch data
@@ -107,6 +109,11 @@ const Instructions: React.FC<InstructionsProps> = ({ orderId }) => {
     return (
         <div className="rounded-sm border border-stroke bg-white px-5 pt-6 pb-2.5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
       <div className="max-w-full overflow-x-auto">
+      {orderData?.order_paid === 'unpaid' ? (
+        <div className='text-red-600 text-md text-center mb-4'>You have not made payment for this order, click pay below to complete payment.</div>
+      ) : (
+        <p></p>
+      )}
         <table className="w-full table-auto">
           <thead>
             <tr className="bg-gray-2 text-left dark:bg-meta-4">
@@ -162,9 +169,18 @@ const Instructions: React.FC<InstructionsProps> = ({ orderId }) => {
                   </h5>
                 </td>
                 <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
-                  <p className="text-black dark:text-white">
-                  ${orderData?.order_amount}
-                  </p>
+                  {orderData?.order_paid === 'unpaid' ? (
+                    <button
+                      className="bg-red-600 w-full px-6 py-2 text-white rounded-sm font-semibold"
+                      onClick={() => {navigate(`/sofia/opspayment/${orderId}`);}}
+                    >
+                      Pay ${orderData.order_amount}
+                    </button>
+                  ) : (
+                    <p className="text-black dark:text-white">
+                      ${orderData?.order_amount}
+                    </p>
+                  )}
                 </td>
               </tr>
               <tr>

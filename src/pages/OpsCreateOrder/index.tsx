@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import OrderFiles from './Components/OrderFiles';
 import { Link, useNavigate } from 'react-router-dom';
+import moment from 'moment';
 
 
 interface ApiResponse {
@@ -69,12 +70,14 @@ type User = {
 
 const Main: React.FC = () => {
     const navigate = useNavigate();
+    const domain = window.location.hostname;
     const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
-    console.log("User Token", token)
+    const [totalOrderPrice, setTotalOrderPrice] = useState<number>(0);
+
 
     const [ACLevels, setACLevels] = useState<ACLevel[]>([]);
     const [selectedId, setSelectedId] = useState<number | null>(null);
-    const [acLevelValue, setACLevelValue] = useState<number | null>(null);
+    const [acLevelValue, setACLevelValue] = useState<number>(1.0);
     const [acLevelName, setACLevelName] = useState<string>('Undergraduate');
 
     // Handle PP Types
@@ -161,9 +164,32 @@ const Main: React.FC = () => {
     const [pricings, setPricings] = useState<Pricing[]>([]);
     const [selectedPricingId, setSelectedPricingId] = useState<number | null>(null);
 
-
+    // Coupon Processes
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<Error | null>(null);
+
+    const [cpnName, setCPNName] = useState<string>('');
+    const [cpnValue, setCPNValue] = useState<number>(0);
+    const [cpnInValue, setCPNInValue] = useState<number>(0);
+
+    const fetchCoupon = async () => {
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/api/opscoupons?cpn_name=${cpnName}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch coupon data');
+            }
+            
+            const cpnResponse = await response.json();
+            if (cpnResponse.data && cpnResponse.data.length > 0) {
+                setCPNValue(cpnResponse.data[0].cpn_value);
+                setCPNInValue(cpnResponse.data[0].cpn_invalue);
+            } else {
+                console.log('No coupons found');
+            }
+        } catch(error) {
+            setError(error as Error);
+        }
+    }
 
     // Create Order
     // First get the User Details
@@ -192,41 +218,134 @@ const Main: React.FC = () => {
         }
     }
 
-    const createOrder= async () => {
-        try {
-            // First Create the Order and get Order Number
-            // Calculate prices considering Coupon e.t.c
-            // Use Order ID to upload the files
-            console.log("Creating Order")
-            uploadFiles();
-        } catch (error) {
-            console.log("Error Creating Order");
-            setOverError("Error Creating Order");
+    const [newTime, setNewTime] = useState<string>('');
+    // const [wrTime, setWrTime] = useState<string>('');
+
+    const getCurrentDateTime = () => {
+        const now = new Date();
+    
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+        const day = String(now.getDate()).padStart(2, '0');
+    
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+    
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    };
+
+    // Get the Total Price
+    const [totalOrderAmount, setTotalOrderAmount] = useState(0.00);
+    const calculateTotalAmount = () => {
+        const baseTotal = Number(((acLevelValue * count * ppTypeValue * dlPricing * spacingValue) + (slides * acLevelValue * ppTypeValue * 3.50)).toFixed(2));
+        
+        if (cpnInValue > 0) {
+            const discountPercentage = cpnInValue / 100; // cpnInValue is 20 for a 20% discount
+            const discountAmount = baseTotal * discountPercentage;
+            return Number((baseTotal - discountAmount).toFixed(2));
+        } else {
+            return Number(baseTotal.toFixed(2));
         }
-    }
+    };
 
-    const [cpnName, setCPNName] = useState<string>('');
-    const [cpnValue, setCPNValue] = useState<number>(0);
-    const [cpnInValue, setCPNInValue] = useState<number>(0);
+    useEffect(() => {
+        setTotalOrderAmount(calculateTotalAmount());
+    }, [acLevelValue, count, ppTypeValue, dlPricing, spacingValue, slides, cpnInValue]);
 
-    const fetchCoupon = async () => {
+
+    // Order Data
+    const orderData = {
+        order_alias: "This is the title",
+        order_timezone: "Local Timezone",
+        order_upsells: "Null",
+        order_wrnickname: "W1",
+        order_period: moment().format('DDMMMYYYY'),
+        order_periodmonth: moment().format('MMMYYYY'),
+        order_ratecomment: "Best",
+        order_revision: "Null",
+        order_dispute: "Null",
+        order_note: "Null",
+        order_fine: "Null",
+        order_finereason: "Null",
+        order_reassignreason: "Null",
+        order_editorcomment: "Null",
+        order_notewriter: "Null",
+        order_title: title,
+        order_tpaper: ppTypeName,
+        order_subject: subjectName,
+        ops_aclevel: acLevelName,
+        order_pages: count,
+        order_instructions: instructions,
+        order_dateposted: getCurrentDateTime(),
+        order_deadline: newTime,
+        order_wrdeadline: newTime,
+        order_sources: sources,
+        order_citation: citationtName,
+        order_amount: totalOrderAmount,
+        order_wramount: 0,
+        order_wquality: "Standard",
+        order_paid: "unpaid",
+        order_clientid: user?.id,
+        order_status: "bidding",
+        order_writer: 0,
+        order_wrconfirm: 0,
+        order_wrpaid: "NO",
+        order_wrpaiddate: getCurrentDateTime(),
+        order_rating: 0,
+        order_ratedate: getCurrentDateTime(),
+        order_site: domain,
+        order_pptslides: 0,
+        order_spacing: spacingtName,
+        order_prefwriter: 0,
+        order_editor: 0,
+        order_edamount: 0,
+        order_edpaid: 0,
+        order_edpaiddate: getCurrentDateTime(),
+        order_coupon: cpnName,
+        order_completeddate: getCurrentDateTime(),
+        order_approveddate: getCurrentDateTime(),
+        order_currency: "USD",
+        order_charts: 0,
+        order_bamount: 0,
+        order_assignedtime: getCurrentDateTime(),
+        order_extended: 0,
+        order_payreminded: 0
+    };
+    
+
+    const createOrder = async () => {
+        const url = "http://127.0.0.1:8000/api/opsorders";
+        // console.log(url)
+        // console.log(title)
+
         try {
-            const response = await fetch(`http://127.0.0.1:8000/api/opscoupons?cpn_name=${cpnName}`);
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(orderData)
+            });
+    
             if (!response.ok) {
-                throw new Error('Failed to fetch coupon data');
+                throw new Error(`Failed to create order: ${response.statusText}`);
             }
-            
-            const cpnResponse = await response.json();
-            if (cpnResponse.data && cpnResponse.data.length > 0) {
-                setCPNValue(cpnResponse.data[0].cpn_value);
-                setCPNInValue(cpnResponse.data[0].cpn_invalue);
-            } else {
-                console.log('No coupons found');
-            }
-        } catch(error) {
-            setError(error as Error);
+    
+            const result = await response.json();
+            console.log("Order created successfully:", result.order_id, "Type:", typeof result.order_id);
+
+            // Upload Files using ID
+            uploadFiles(result.order_id);
+            return result;
+        } catch (error) {
+            console.error("Error creating order:", error);
+            throw error;
         }
-    }
+        {/**/}
+    };
 
     const fetchACLevelsData = async () => {
         try {
@@ -351,11 +470,7 @@ const Main: React.FC = () => {
 
     // Upload Files
     const [responses, setResponses] = useState<string[]>([]);
-    const uploadFiles = async () => {
-        if (selectedFiles.length === 0) {
-          alert("Please select files to upload");
-          return;
-        }
+    const uploadFiles = async (theOrderId: number) => {
     
         const newResponses: string[] = [];
         for (const file of selectedFiles) {
@@ -363,7 +478,7 @@ const Main: React.FC = () => {
           formData.append('file', file);
     
           try {
-            const response = await fetch(`http://127.0.0.1:8000/api/files/upload/${orderId}`, {
+            const response = await fetch(`http://127.0.0.1:8000/api/files/upload/${theOrderId}`, {
               method: 'POST',
               body: formData,
             });
@@ -373,7 +488,10 @@ const Main: React.FC = () => {
             if (response.ok) {
               newResponses.push(`File ${file.name} uploaded successfully. URL: ${result.url}`);
               console.log(`File ${file.name} uploaded successfully. URL: ${result.url}`)
-              console.log("This is the Order ID" + orderId)
+              console.log("This is the Order ID" + theOrderId)
+
+              // Navigate to Payment Page
+              
             } else {
               newResponses.push(`Error uploading file ${file.name}: ${result.message}`);
             }
@@ -395,7 +513,19 @@ const Main: React.FC = () => {
     // Handle Deadline
     const [deadlineString, setDeadlineString] = useState<string>('');
 
-    const addTime = (duration: string): Date => {
+    // Set Date Format
+    const formatDate = (date: Date): string => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+    
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    };
+
+    const addTime = (duration: string): string => {
         const currentTime = new Date();
     
         const regex = /^(\d+)(Hours|Days)$/;
@@ -419,20 +549,10 @@ const Main: React.FC = () => {
                 throw new Error("Invalid time unit. Use 'Hours' or 'Days'.");
         }
     
-        return currentTime;
+        return formatDate(currentTime);
     };
 
-    const [newTime, setNewTime] = useState<Date | null>(null);
-
-    const handleCalculateNewTime = () => {
-        try {
-            const calculatedTime = addTime(deadlineString);
-            setNewTime(calculatedTime);
-        } catch (error) {
-            setOverError('Error calculating Time');
-            console.log('Error calculating Time');
-        }
-    };
+    
 
     const selectPricingButton = (pricingButtonId: number, pricingUrgency: number, pricingDuration: string) => {
         setSelectedPricingId(pricingButtonId);
@@ -462,7 +582,7 @@ const Main: React.FC = () => {
     const [loginError, setLoginError] = useState('');
     const [showFieldsError, setShowFieldsError] = useState(false);
     const [requestError, setRequestError] = useState(false);
-    const domain = window.location.hostname;
+    
 
 
     
@@ -470,7 +590,7 @@ const Main: React.FC = () => {
 
     useEffect(() => {
         if (token) {
-            // If the token is populated, run your function here
+            console.log(token);
             fetchUser();
         }
     }, [token]);
