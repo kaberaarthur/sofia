@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import CoverOne from '../../images/cover/cover-01.png';
+import config from '../../config/config';
 
 interface ApiResponse {
   data: Coupon[];
@@ -27,7 +28,7 @@ const Main: React.FC = () => {
   // Fetch Coupons
   const fetchData = async () => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/opscoupons`);
+      const response = await fetch(`${config.apiBaseUrl}/opscoupons`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }

@@ -1,6 +1,7 @@
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import config from '../../config/config';
 
 
 interface ApiResponse {
@@ -115,7 +116,7 @@ const Main: React.FC = () => {
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8000/api/user', {
+        const response = await fetch(`${config.apiBaseUrl}/user`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -141,7 +142,7 @@ const Main: React.FC = () => {
   // Fetch Orders Data
   const fetchData = async (page: number) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/opsorders?page=${page}&order_clientid=${orderClientId}&per_page=${perPage}&order_status=${orderStatus}`);
+      const response = await fetch(`${config.apiBaseUrl}/opsorders?page=${page}&order_clientid=${orderClientId}&per_page=${perPage}&order_status=${orderStatus}`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }

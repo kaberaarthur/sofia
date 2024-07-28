@@ -1,6 +1,8 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import config from '../../../config/config';
+
 
 interface InstructionsProps {
     orderId: string;
@@ -82,7 +84,7 @@ const Instructions: React.FC<InstructionsProps> = ({ orderId }) => {
         // Define the async function to fetch data
         const fetchData = async () => {
           try {
-            const response = await fetch(`http://127.0.0.1:8000/api/opsorders/${orderId}`);
+            const response = await fetch(`${config.apiBaseUrl}/opsorders/${orderId}`);
             if (!response.ok) {
                 const errorMessage = 'Network response was not ok';
                 throw new Error(errorMessage);

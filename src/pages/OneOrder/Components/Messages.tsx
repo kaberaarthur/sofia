@@ -1,6 +1,7 @@
 import React from 'react';
 import { useEffect, useState, ChangeEvent } from 'react';
 import UserTwentyFour from '../../../images/user/user-24.png';
+import config from '../../../config/config';
 
 
 interface InstructionsProps {
@@ -38,7 +39,7 @@ const Messages: React.FC<InstructionsProps> = ({ orderId }) => {
     useEffect(() => {
         const fetchData = async () => {
           try {
-            const response = await fetch(`http://127.0.0.1:8000/api/opsordermsg?msg_orderid=${orderId}`);
+            const response = await fetch(`${config.apiBaseUrl}/opsordermsg?msg_orderid=${orderId}`);
             if (!response.ok) {
               throw new Error('Network response was not ok');
             }
@@ -62,7 +63,7 @@ const Messages: React.FC<InstructionsProps> = ({ orderId }) => {
         const token = "2|4xdF9NrlcXq6flcsf4KdQrgfFBAKWFn92UPJMd5I6cf58807";
         const csrfToken = "rpLf22otwPUx6VOE2Pz0fInVCzxdaehpXHodCr9Y"
 
-        const response = await fetch('http://127.0.0.1:8000/api/opsordermsg', {
+        const response = await fetch(`${config.apiBaseUrl}/opsordermsg`, {
             method: 'POST',
             headers: {
             'Content-Type': 'application/json',

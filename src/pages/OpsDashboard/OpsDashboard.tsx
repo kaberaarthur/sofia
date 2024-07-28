@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import CardDataStats from '../../components/CardDataStats';
+import config from '../../config/config';
+
 
 interface ApiResponse {
   total: number;
@@ -89,7 +91,7 @@ const OpsDashboard: React.FC = () => {
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8000/api/user', {
+        const response = await fetch(`${config.apiBaseUrl}/user`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -115,7 +117,7 @@ const OpsDashboard: React.FC = () => {
   // Fetch Orders Data
   const fetchData = async () => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/opsorders?order_clientid=${orderClientId}`);
+      const response = await fetch(`${config.apiBaseUrl}/opsorders?order_clientid=${orderClientId}`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }

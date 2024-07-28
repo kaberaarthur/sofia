@@ -1,5 +1,6 @@
 import React, { useState, ChangeEvent, useEffect } from 'react';
 import ErrorAlert from '../../UiElements/ErrorAlert';
+import config from '../../../config/config';
 
 
 interface InstructionsProps {
@@ -34,7 +35,7 @@ const OrderFiles: React.FC<InstructionsProps> = ({ orderId }) => {
     useEffect(() => {
         const fetchFileData = async () => {
         try {
-            const response = await fetch(`http://127.0.0.1:8000/api/files?file_orderid=${orderId}`);
+            const response = await fetch(`${config.apiBaseUrl}/files?file_orderid=${orderId}`);
             if (!response.ok) {
             throw new Error('Failed to fetch file data');
             }
@@ -83,7 +84,7 @@ const OrderFiles: React.FC<InstructionsProps> = ({ orderId }) => {
           formData.append('file', file);
     
           try {
-            const response = await fetch(`http://127.0.0.1:8000/api/files/upload/${orderId}`, {
+            const response = await fetch(`${config.apiBaseUrl}/files/upload/${orderId}`, {
               method: 'POST',
               body: formData,
             });
@@ -119,7 +120,7 @@ const OrderFiles: React.FC<InstructionsProps> = ({ orderId }) => {
       const handleDownload = (file_generatedname: string) => {
         // console.log(`Download Button Clicked: ${file_generatedname}`);
     
-        const downloadUrl = `http://127.0.0.1:8000/storage/uploads/${file_generatedname}`;
+        const downloadUrl = `https://masterswriters.us/sofia/storage/uploads/${file_generatedname}`;
         // console.log(downloadUrl)
     
         // Open the download URL in a new window

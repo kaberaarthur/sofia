@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import config from '../../config/config';
 
 declare global {
   interface Window {
@@ -122,7 +123,7 @@ const OpsPayment: React.FC = () => {
   const handlePayment = async () => {
     // if (!paymentDetails) return;
     
-    const url = "http://127.0.0.1:8000/api/opspayments";
+    const url = `${config.apiBaseUrl}/opspayments`;
     // console.log("Payment Details Object: ", paymentDetails);
 
      
@@ -154,7 +155,7 @@ const OpsPayment: React.FC = () => {
 
   // Update Order Details
   const updateOrder = async () => {
-    const url = `http://127.0.0.1:8000/api/opsorders/${orderId}`;
+    const url = `${config.apiBaseUrl}/opsorders/${orderId}`;
 
     try {
       const response = await fetch(url, {
@@ -184,7 +185,7 @@ const OpsPayment: React.FC = () => {
   // Function to fetch order details
   const fetchOrder = async (orderId: number) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/opsorders/${orderId}`);
+      const response = await fetch(`${config.apiBaseUrl}/opsorders/${orderId}`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -199,7 +200,7 @@ const OpsPayment: React.FC = () => {
 
   const fetchUser = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/user', {
+      const response = await fetch(`${config.apiBaseUrl}/user`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,

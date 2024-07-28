@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Breadcrumb from '../components/Breadcrumbs/Breadcrumb';
-import userThree from '../images/user/user-03.png';
+import config from '../config/config';
+
 
 type User = {
   id: number;
@@ -24,7 +25,7 @@ const Settings = () => {
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8000/api/user', {
+        const response = await fetch(`${config.apiBaseUrl}/user`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -55,7 +56,7 @@ const Settings = () => {
 
   const updateUserDetails = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/user', {
+      const response = await fetch(`${config.apiBaseUrl}/user`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

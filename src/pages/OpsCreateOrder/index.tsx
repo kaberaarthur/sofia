@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import OrderFiles from './Components/OrderFiles';
 import { Link, useNavigate } from 'react-router-dom';
 import moment from 'moment';
+import config from '../../config/config';
 
 
 interface ApiResponse {
@@ -174,7 +175,7 @@ const Main: React.FC = () => {
 
     const fetchCoupon = async () => {
         try {
-            const response = await fetch(`http://127.0.0.1:8000/api/opscoupons?cpn_name=${cpnName}`);
+            const response = await fetch(`${config.apiBaseUrl}/opscoupons?cpn_name=${cpnName}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch coupon data');
             }
@@ -198,7 +199,7 @@ const Main: React.FC = () => {
 
     const fetchUser = async () => {
         try {
-            const response = await fetch('http://127.0.0.1:8000/api/user', {
+            const response = await fetch(`${config.apiBaseUrl}/user`, {
                 method: 'GET',
                 headers: {
                   'Authorization': `Bearer ${token}`,
@@ -315,7 +316,7 @@ const Main: React.FC = () => {
     
 
     const createOrder = async () => {
-        const url = "http://127.0.0.1:8000/api/opsorders";
+        const url = `${config.apiBaseUrl}/opsorders`;
         // console.log(url)
         // console.log(title)
 
@@ -349,7 +350,7 @@ const Main: React.FC = () => {
 
     const fetchACLevelsData = async () => {
         try {
-            const response = await fetch(`http://127.0.0.1:8000/api/opsaclevels`);
+            const response = await fetch(`${config.apiBaseUrl}/opsaclevels`);
             if (!response.ok) {
                 throw new Error('Network response was not ok: Academic Levels');
             }
@@ -375,7 +376,7 @@ const Main: React.FC = () => {
 
     const fetchPptypesData = async () => {
         try {
-            const response = await fetch(`http://127.0.0.1:8000/api/opspptypes`);
+            const response = await fetch(`${config.apiBaseUrl}/opspptypes`);
             if (!response.ok) {
                 throw new Error('Network response was not ok: Paper Types');
             }
@@ -392,7 +393,7 @@ const Main: React.FC = () => {
 
     const fetchSubjectsData = async () => {
         try {
-            const response = await fetch(`http://127.0.0.1:8000/api/opssubjects`);
+            const response = await fetch(`${config.apiBaseUrl}/opssubjects`);
             if (!response.ok) {
                 throw new Error('Network response was not ok: Subjects');
             }
@@ -410,7 +411,7 @@ const Main: React.FC = () => {
 
     const fetchPricingsData = async () => {
         try {
-            const response = await fetch(`http://127.0.0.1:8000/api/opspricing`);
+            const response = await fetch(`${config.apiBaseUrl}/opspricing`);
             if (!response.ok) {
                 throw new Error('Network response was not ok: Subjects');
             }
@@ -478,7 +479,7 @@ const Main: React.FC = () => {
           formData.append('file', file);
     
           try {
-            const response = await fetch(`http://127.0.0.1:8000/api/files/upload/${theOrderId}`, {
+            const response = await fetch(`${config.apiBaseUrl}/files/upload/${theOrderId}`, {
               method: 'POST',
               body: formData,
             });
@@ -607,7 +608,7 @@ const Main: React.FC = () => {
     
         // Send data to the API
         try {
-          const response = await fetch('http://127.0.0.1:8000/api/login', {
+          const response = await fetch(`${config.apiBaseUrl}/login`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -666,7 +667,7 @@ const Main: React.FC = () => {
     
         // Send data to the API
         try {
-          const response = await fetch('http://127.0.0.1:8000/api/register', {
+          const response = await fetch(`${config.apiBaseUrl}/register`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

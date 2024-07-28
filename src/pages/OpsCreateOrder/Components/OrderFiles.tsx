@@ -1,5 +1,6 @@
 import React, { useState, ChangeEvent, useEffect } from 'react';
 import ErrorAlert from '../../UiElements/ErrorAlert';
+import config from '../../../config/config';
 
 
 interface InstructionsProps {
@@ -58,7 +59,7 @@ const OrderFiles: React.FC<InstructionsProps> = ({ orderId, onFilesSelected }) =
           formData.append('file', file);
     
           try {
-            const response = await fetch(`http://127.0.0.1:8000/api/files/upload/${orderId}`, {
+            const response = await fetch(`${config.apiBaseUrl}/files/upload/${orderId}`, {
               method: 'POST',
               body: formData,
             });

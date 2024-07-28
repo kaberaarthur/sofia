@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import ClickOutside from '../ClickOutside';
 import UserOne from '../../images/user/user-24.png';
+import config from '../../config/config';
+
 
 type User = {
   id: number;
@@ -34,7 +36,7 @@ const DropdownUser = () => {
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8000/api/user', {
+        const response = await fetch(`${config.apiBaseUrl}/user`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -60,7 +62,7 @@ const DropdownUser = () => {
   // Logout User
   const logoutUser = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/logout', {
+      const response = await fetch(`${config.apiBaseUrl}/logout`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
