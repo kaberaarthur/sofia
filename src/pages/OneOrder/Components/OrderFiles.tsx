@@ -14,6 +14,10 @@ interface FileData {
     created_at: string;
     updated_at: string;
     file_orderid: string;
+    file_title: string;
+    file_update: string;
+    file_name: string;
+    file_url: string;
 }
 
 interface Result {
@@ -35,7 +39,7 @@ const OrderFiles: React.FC<InstructionsProps> = ({ orderId }) => {
     useEffect(() => {
         const fetchFileData = async () => {
         try {
-            const response = await fetch(`${config.apiBaseUrl}/files?file_orderid=${orderId}`);
+            const response = await fetch(`${config.apiBaseUrl}/opsorderfiles?file_orderid=${orderId}`);
             if (!response.ok) {
             throw new Error('Failed to fetch file data');
             }
@@ -120,12 +124,19 @@ const OrderFiles: React.FC<InstructionsProps> = ({ orderId }) => {
       const handleDownload = (file_generatedname: string) => {
         // console.log(`Download Button Clicked: ${file_generatedname}`);
     
-        const downloadUrl = `https://masterswriters.us/sofia/storage/uploads/${file_generatedname}`;
-        // console.log(downloadUrl)
+        // const downloadUrl = `https://masterswriters.us/sofia/storage/uploads/${file_generatedname}`;
+        const downloadUrl = `http://127.0.0.1/sofia/storage/uploads/${file_generatedname}`;
+        console.log(downloadUrl)
     
         // Open the download URL in a new window
         window.open(downloadUrl, '_blank');
       };
+
+      const handleClick = (fileName: string) => {
+        const fullUrl = `${config.fileHostUrl}${fileName}`;
+        console.log(fullUrl);
+        window.open(fullUrl, '_blank');
+    };
 
     return (
         <>
@@ -159,16 +170,16 @@ const OrderFiles: React.FC<InstructionsProps> = ({ orderId }) => {
                                 </td>
                                 <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
                                     <p className="text-black dark:text-white">
-                                        {file.original_name}
+                                        {file.file_title}
                                     </p>
                                 </td>
                                 <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
                                     <p className="text-black dark:text-white">
-                                        {file.created_at}
+                                        {file.file_update}
                                     </p>
                                 </td>
                                 <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
-                                <button className="w-full xl:mr-3 bg-success text-white p-2 text-xl" onClick={() => file.id && handleDownload(file.generated_name)}>
+                                <button className="w-full xl:mr-3 bg-success text-white p-2 text-xl" onClick={() => handleClick(file.file_name)}>
                                     Download
                                 </button>
                                 </td>

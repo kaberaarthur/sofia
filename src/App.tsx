@@ -32,6 +32,7 @@ import OpsUnpaidOrders from './pages/OpsUnpaidOrders'
 import OpsDiscounts from './pages/OpsDiscounts'
 import OpsCreateOrder from './pages/OpsCreateOrder'
 import OpsPayment from './pages/OpsPayment'
+import OpsTest from './pages/OpsTest'
 
 
 function App() {
@@ -50,6 +51,15 @@ function App() {
     <Loader />
   ) : (
     <Routes>
+      <Route
+        path="/sofia/"
+        element={
+          <DefaultLayout>
+            <PageTitle title="Test Page" />
+            <OpsTest />
+          </DefaultLayout>
+        }
+      />
       <Route
         path="/sofia/opsdashboard"
         element={
