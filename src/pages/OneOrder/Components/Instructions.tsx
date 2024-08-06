@@ -1,6 +1,6 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import config from '../../../config/config';
 
 
@@ -192,9 +192,17 @@ const Instructions: React.FC<InstructionsProps> = ({ orderId }) => {
                   </h5>
                 </td>
                 <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
-                  <p className="text-black dark:text-white">
-                  {orderData?.order_writer}
-                  </p>
+                  <Link 
+                    to="#" 
+                    onClick={(e) => {
+                      e.preventDefault(); // Prevent default link behavior
+                      navigate(`/sofia/opswriter/${orderData?.order_writer}`);
+                    }}
+                  >
+                    <p className="text-blue-500 dark:text-white">
+                      {orderData?.order_writer}
+                    </p>
+                  </Link>
                 </td>
               </tr>
               <tr>

@@ -33,6 +33,7 @@ import OpsDiscounts from './pages/OpsDiscounts'
 import OpsCreateOrder from './pages/OpsCreateOrder'
 import OpsPayment from './pages/OpsPayment'
 import OpsTest from './pages/OpsTest'
+import OpsWriter from './pages/OpsWriter'
 
 
 function App() {
@@ -156,6 +157,15 @@ function App() {
           <DefaultLayout>
             <PageTitle title="One Order" />
             <OneOrder/>
+          </DefaultLayout>
+        }
+      />
+      <Route
+        path="/sofia/opswriter/:writerId"
+        element={
+          <DefaultLayout>
+            <PageTitle title="Writer Details" />
+            <OpsWriter/>
           </DefaultLayout>
         }
       />
