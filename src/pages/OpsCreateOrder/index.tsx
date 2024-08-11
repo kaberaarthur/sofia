@@ -74,6 +74,7 @@ const Main: React.FC = () => {
     const domain = window.location.hostname;
     const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
     const [totalOrderPrice, setTotalOrderPrice] = useState<number>(0);
+    const [errorMessage, setErrorMessage] = useState<string>('');
 
 
     const [ACLevels, setACLevels] = useState<ACLevel[]>([]);
@@ -169,7 +170,7 @@ const Main: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<Error | null>(null);
 
-    const [cpnName, setCPNName] = useState<string>('No CPN');
+    const [cpnName, setCPNName] = useState<string>('Coupon');
     const [cpnValue, setCPNValue] = useState<number>(0);
     const [cpnInValue, setCPNInValue] = useState<number>(0);
 
@@ -177,6 +178,7 @@ const Main: React.FC = () => {
         try {
             const response = await fetch(`${config.apiBaseUrl}/opscoupons?cpn_name=${cpnName}`);
             if (!response.ok) {
+                setErrorMessage('Failed to fetch coupon data');
                 throw new Error('Failed to fetch coupon data');
             }
             
@@ -208,6 +210,7 @@ const Main: React.FC = () => {
               });
       
               if (!response.ok) {
+                window.location.replace('/sofia/auth/signin');
                 throw new Error('Failed to fetch user details');
               }
       
@@ -316,11 +319,13 @@ const Main: React.FC = () => {
     
 
     const createOrder = async () => {
+        
         const url = `${config.apiBaseUrl}/opsorders`;
         // console.log(url)
         // console.log(title)
 
         try {
+            setLoading(true);
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
@@ -338,14 +343,20 @@ const Main: React.FC = () => {
             const result = await response.json();
             console.log("Order created successfully:", result.order_id, "Type:", typeof result.order_id);
 
+            window.location.replace(`/sofia/opspayment/${result.order_id}`);
+
             // Upload Files using ID
             uploadFiles(result.order_id);
+            setLoading(false);
             return result;
         } catch (error) {
+            setErrorMessage('Error Creating Order');
             console.error("Error creating order:", error);
+            setLoading(false);
             throw error;
         }
         {/**/}
+        
     };
 
     const fetchACLevelsData = async () => {
@@ -1050,7 +1061,37 @@ const Main: React.FC = () => {
                         <div>
                             {/* Continue Button */}
                             <div className="flex flex-col md:flex-row pb-4">
-                                <button className='border border-blue-950 w-full py-4 text-2xl hover:text-blue-950 hover:bg-transparent bg-blue-950 text-white' onClick={createOrder}>Place Order</button>
+                                <p className='text-sm text-red-600'>{errorMessage}</p>
+                                <button 
+                                    className='border border-blue-950 w-full py-4 text-2xl hover:text-blue-950 hover:bg-transparent bg-blue-950 text-white' 
+                                    onClick={createOrder}
+                                    disabled={loading} // Optionally disable the button while loading
+                                    >
+                                    {loading ? (
+                                        <svg
+                                        className="animate-spin h-5 w-5 mr-3 inline-block"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        >
+                                        <circle
+                                            className="opacity-25"
+                                            cx="12"
+                                            cy="12"
+                                            r="10"
+                                            stroke="currentColor"
+                                            strokeWidth="4"
+                                        ></circle>
+                                        <path
+                                            className="opacity-75"
+                                            fill="currentColor"
+                                            d="M4 12a8 8 0 018-8v8H4z"
+                                        ></path>
+                                        </svg>
+                                    ) : (
+                                        'Place Order'
+                                    )}
+                                </button>
                             </div>
                         </div>
                     ) : (
