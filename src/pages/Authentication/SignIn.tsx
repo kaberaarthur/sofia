@@ -3,6 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 // import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import LogoDark from '../../images/logo/logo-dark.svg';
 import Logo from '../../images/logo/logo.svg';
+import mwLogo from '../../images/logo/master-writers-logo.svg';
+import mwLogoDark from '../../images/logo/master-writers-logo-dark.svg';
+
 import config from '../../config/config';
 
 const SignIn: React.FC = () => {
@@ -77,8 +80,8 @@ const SignIn: React.FC = () => {
           <div className="hidden w-full xl:block xl:w-1/2">
             <div className="py-17.5 px-26 text-center">
               <Link className="mb-5.5 inline-block" to="/">
-                <img className="hidden dark:block" src={Logo} alt="Logo" />
-                <img className="dark:hidden" src={LogoDark} alt="Logo" />
+                <img className="hidden dark:block" src={mwLogo} alt="Logo" />
+                <img className="dark:hidden" src={mwLogoDark} alt="Logo" />
               </Link>
 
               <span className="mt-15 inline-block">

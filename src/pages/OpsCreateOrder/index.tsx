@@ -169,7 +169,7 @@ const Main: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<Error | null>(null);
 
-    const [cpnName, setCPNName] = useState<string>('');
+    const [cpnName, setCPNName] = useState<string>('No CPN');
     const [cpnValue, setCPNValue] = useState<number>(0);
     const [cpnInValue, setCPNInValue] = useState<number>(0);
 
